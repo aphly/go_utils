@@ -1,6 +1,7 @@
 package go_utils
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -10,8 +11,8 @@ import (
 
 type Logging struct {
 	sync.Mutex
-	RootPath string // 保存路径
-	Name     string // 日志项目名
+	RootPath string // 保存路径 如 log
+	Name     string // 日志项目名 如 mysql
 	MaxSize  int64  // 单个日志文件的最大大小（MB）
 }
 
@@ -59,7 +60,10 @@ func (l *Logging) writelog(pre string, msg string) error {
 	}
 	if today_max == 0 {
 		filePath := dir + "/" + dateStr + "_1.log"
-		AppendContent(filePath, msg)
+		err := AppendContent(filePath, msg)
+		if err != nil {
+			return err
+		}
 	} else {
 		oldPath := dir + "/" + dateStr + "_" + strconv.Itoa(today_max) + ".log"
 		fileInfo, err := os.Stat(oldPath)
@@ -68,34 +72,40 @@ func (l *Logging) writelog(pre string, msg string) error {
 		}
 		if fileInfo.Size() > l.MaxSize*1024*1024 {
 			newPath := dir + "/" + dateStr + "_" + strconv.Itoa(today_max+1) + ".log"
-			AppendContent(newPath, msg)
+			err := AppendContent(newPath, msg)
+			if err != nil {
+				return err
+			}
 		} else {
-			AppendContent(oldPath, msg)
+			err := AppendContent(oldPath, msg)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
-func (l *Logging) Info(args ...string) {
-	if len(args) == 1 {
-		l.writelog(l.Name+"/info", args[0])
-	} else if len(args) == 2 {
-		l.writelog(args[0]+"/info", args[1])
+func (l *Logging) Info(msg any) error {
+	err := l.writelog(l.Name+"/info", fmt.Sprint(msg))
+	if err != nil {
+		return err
 	}
+	return nil
 }
 
-func (l *Logging) Warn(args ...string) {
-	if len(args) == 1 {
-		l.writelog(l.Name+"/warn", args[0])
-	} else if len(args) == 2 {
-		l.writelog(args[0]+"/warn", args[1])
+func (l *Logging) Warn(msg any) error {
+	err := l.writelog(l.Name+"/warn", fmt.Sprint(msg))
+	if err != nil {
+		return err
 	}
+	return nil
 }
 
-func (l *Logging) Error(args ...string) {
-	if len(args) == 1 {
-		l.writelog(l.Name+"/error", args[0])
-	} else if len(args) == 2 {
-		l.writelog(args[0]+"/error", args[1])
+func (l *Logging) Error(msg any) error {
+	err := l.writelog(l.Name+"/error", fmt.Sprint(msg))
+	if err != nil {
+		return err
 	}
+	return nil
 }

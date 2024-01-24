@@ -1,6 +1,9 @@
 package go_utils
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func BaseByFileName(fileName string) string {
 	for i := len(fileName) - 1; i >= 0 && fileName[i] != '/'; i-- {
@@ -11,13 +14,13 @@ func BaseByFileName(fileName string) string {
 	return ""
 }
 
-func AppendContent(filePath string, msg string) error {
+func AppendContent(filePath string, msg any) error {
 	logFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 	defer logFile.Close()
-	_, err = logFile.WriteString(msg + " \n")
+	_, err = logFile.WriteString(fmt.Sprintln(msg))
 	if err != nil {
 		return err
 	}
